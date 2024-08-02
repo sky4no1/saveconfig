@@ -4,8 +4,7 @@ local InterfaceManager = {} do
 	InterfaceManager.Folder = "FluentSettings"
     InterfaceManager.Settings = {
         Theme = "Darker",
-        Acrylic = false,
-        Transparency = true,
+        Transparency = false,
         MenuKeybind = "LeftControl"
     }
 
