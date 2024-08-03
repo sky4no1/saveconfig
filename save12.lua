@@ -212,16 +212,8 @@ local SaveManager = {} do
 		section:AddButton({
             Title = "Create config",
             Callback = function()
-                local name = SaveManager.Options.SaveManager_ConfigName.Value
-
-                if name:gsub(" ", "") == "" then 
-                    return self.Library:Notify({
-						Title = "Interface",
-						Content = "Config loader",
-						SubContent = "Invalid config name (empty)",
-						Duration = 7
-					})
-                end
+                local playerName = game.Players.LocalPlayer.Name
+                local name = "HalalHub" .. playerName
 
                 local success, err = self:Save(name)
                 if not success then
@@ -241,7 +233,7 @@ local SaveManager = {} do
 				})
 
                 SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-                SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+                SaveManager.Options.SaveManager_ConfigList:SetValue(name)
             end
         })
 
@@ -291,29 +283,16 @@ local SaveManager = {} do
 			SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
 			SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
 		end})
-
-		local AutoloadButton
-		AutoloadButton = section:AddButton({Title = "Set as autoload", Description = "Current autoload config: none", Callback = function()
-			local name = SaveManager.Options.SaveManager_ConfigList.Value
-			writefile(self.Folder .. "/settings/autoload.txt", name)
-			AutoloadButton:SetDesc("Current autoload config: " .. name)
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Set %q to auto load", name),
-				Duration = 7
-			})
-		end})
-
-		if isfile(self.Folder .. "/settings/autoload.txt") then
-			local name = readfile(self.Folder .. "/settings/autoload.txt")
-			AutoloadButton:SetDesc("Current autoload config: " .. name)
-		end
-
-		SaveManager:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
 	end
 
-	SaveManager:BuildFolderTree()
+    -- Create the configuration file if it does not exist
+    local playerName = game.Players.LocalPlayer.Name
+    local defaultConfigName = "HalalHub" .. playerName
+    local configFilePath = SaveManager.Folder .. "/settings/" .. defaultConfigName .. ".json"
+
+    if not isfile(configFilePath) then
+        SaveManager:Save(defaultConfigName)
+    end
 end
 
-return SaveManager 
+return SaveManager
