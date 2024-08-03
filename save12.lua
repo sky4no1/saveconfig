@@ -74,12 +74,12 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:SetFolder(folder)
-		self.Folder = folder
+		self.Folder = folder;
 		self:BuildFolderTree()
 	end
 
 	function SaveManager:Save(name)
-		if not name then
+		if (not name) then
 			return false, "no config file is selected"
 		end
 
@@ -106,7 +106,7 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:Load(name)
-		if not name then
+		if (not name) then
 			return false, "no config file is selected"
 		end
 		
@@ -213,8 +213,6 @@ local SaveManager = {} do
             Title = "Create config",
             Callback = function()
                 local name = SaveManager.Options.SaveManager_ConfigName.Value
-                local playerName = game.Players.LocalPlayer.Name
-                local configName = "HalalHub" .. playerName
 
                 if name:gsub(" ", "") == "" then 
                     return self.Library:Notify({
@@ -225,8 +223,7 @@ local SaveManager = {} do
 					})
                 end
 
-                -- Automatically create and load the config file
-                local success, err = self:Save(configName)
+                local success, err = self:Save(name)
                 if not success then
                     return self.Library:Notify({
 						Title = "Interface",
@@ -236,12 +233,10 @@ local SaveManager = {} do
 					})
                 end
 
-                self:Load(configName)
-
-                self.Library:Notify({
+				self.Library:Notify({
 					Title = "Interface",
 					Content = "Config loader",
-					SubContent = string.format("Created and loaded config %q", configName),
+					SubContent = string.format("Created config %q", name),
 					Duration = 7
 				})
 
@@ -287,42 +282,38 @@ local SaveManager = {} do
 			self.Library:Notify({
 				Title = "Interface",
 				Content = "Config loader",
-				SubContent = string.format("Overwritten config %q", name),
+				SubContent = string.format("Overwrote config %q", name),
 				Duration = 7
 			})
 		end})
 
-		section:AddButton({Title = "Delete config", Callback = function()
-			local name = SaveManager.Options.SaveManager_ConfigList.Value
-
-			if name and name ~= "" then
-				local file = self.Folder .. "/settings/" .. name .. ".json"
-				if isfile(file) then
-					delfile(file)
-					SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-					SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
-
-					self.Library:Notify({
-						Title = "Interface",
-						Content = "Config loader",
-						SubContent = string.format("Deleted config %q", name),
-						Duration = 7
-					})
-				else
-					self.Library:Notify({
-						Title = "Interface",
-						Content = "Config loader",
-						SubContent = "Config file does not exist.",
-						Duration = 7
-					})
-				end
-			end
+		section:AddButton({Title = "Refresh list", Callback = function()
+			SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+			SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
 		end})
+
+		local AutoloadButton
+		AutoloadButton = section:AddButton({Title = "Set as autoload", Description = "Current autoload config: none", Callback = function()
+			local name = SaveManager.Options.SaveManager_ConfigList.Value
+			writefile(self.Folder .. "/settings/autoload.txt", name)
+			AutoloadButton:SetDesc("Current autoload config: " .. name)
+			self.Library:Notify({
+				Title = "Interface",
+				Content = "Config loader",
+				SubContent = string.format("Set %q to auto load", name),
+				Duration = 7
+			})
+		end})
+
+		if isfile(self.Folder .. "/settings/autoload.txt") then
+			local name = readfile(self.Folder .. "/settings/autoload.txt")
+			AutoloadButton:SetDesc("Current autoload config: " .. name)
+		end
+
+		SaveManager:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
 	end
 
 	SaveManager:BuildFolderTree()
-
-	return SaveManager
 end
 
-return SaveManager
+return SaveManager 
