@@ -104,13 +104,6 @@ local SaveManager = {} do
         writefile(fullPath, encoded)
         return true
     end
-
-local function autoSave()
-    	while true do
-        SaveManager:Save()
-        wait(10) -- Подождать 10 секунд
-    end
-end
 	
     function SaveManager:LoadAutoloadConfig()
         local playerName = game.Players.LocalPlayer.Name
