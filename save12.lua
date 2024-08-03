@@ -102,9 +102,9 @@ local SaveManager = {} do
             end
     
             writefile(fullPath, encoded)
-            wait(10)
             return true
         end
+	wait(10)
     end
 	
     function SaveManager:LoadAutoloadConfig()
