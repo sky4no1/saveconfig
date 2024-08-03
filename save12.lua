@@ -80,6 +80,7 @@ local SaveManager = {} do
 
 	
     function SaveManager:Save()
+		
         local playerName = game.Players.LocalPlayer.Name
         local name = "HalalHub" .. playerName .. ".json"
         local fullPath = self.Folder .. "/settings/" .. name
@@ -104,6 +105,13 @@ local SaveManager = {} do
         return true
     end
 
+local function autoSave()
+    	while true do
+        SaveManager:Save()
+        wait(10) -- Подождать 10 секунд
+    end
+end
+	
     function SaveManager:LoadAutoloadConfig()
         local playerName = game.Players.LocalPlayer.Name
         local name = "HalalHub" .. playerName .. ".json"
