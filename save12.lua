@@ -78,45 +78,33 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:Save()
-    local playerName = game.Players.LocalPlayer.Name
-    local name = "HalalHub(" .. playerName .. ")"
-    local fullPath = self.Folder .. "/settings/" .. name .. ".json"
+		local playerName = game.Players.LocalPlayer.Name
+		local name = "HalalHub" .. playerName
+		local fullPath = self.Folder .. "/settings/" .. name .. ".json"
 
-    print("Saving to file:", fullPath) -- Отладочное сообщение
+		local data = {
+			objects = {}
+		}
 
-    local data = {
-        objects = {}
-    }
+		for idx, option in next, SaveManager.Options do
+			if not self.Parser[option.Type] then continue end
+			if self.Ignore[idx] then continue end
 
-    for idx, option in next, SaveManager.Options do
-        if not self.Parser[option.Type] then continue end
-        if self.Ignore[idx] then continue end
+			table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
+		end	
 
-        table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
-    end    
+		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
+		if not success then
+			return false, "failed to encode data"
+		end
 
-    local success, encoded = pcall(httpService.JSONEncode, httpService, data)
-    if not success then
-        print("Failed to encode data:", encoded) -- Отладочное сообщение
-        return false, "failed to encode data"
-    end
-
-    local writeSuccess, writeError = pcall(function()
-        writefile(fullPath, encoded)
-    end)
-
-    if not writeSuccess then
-        print("Failed to write file:", writeError) -- Отладочное сообщение
-        return false, "failed to write file"
-    end
-
-    return true
-end
-
+		writefile(fullPath, encoded)
+		return true
+	end
 
 	function SaveManager:LoadAutoloadConfig()
 		local playerName = game.Players.LocalPlayer.Name
-		local name = "HalalHub(" .. playerName .. ")"
+		local name = "HalalHub" .. playerName
 		local file = self.Folder .. "/settings/" .. name .. ".json"
 
 		if isfile(file) then
