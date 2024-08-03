@@ -127,12 +127,6 @@ local SaveManager = {} do
                 end
             end
 
-            self.Library:Notify({
-                Title = "Interface",
-                Content = "Config loader",
-                SubContent = string.format("Auto loaded config %q", name),
-                Duration = 7
-            })
         end
     end
 
@@ -241,13 +235,6 @@ local SaveManager = {} do
 					})
                 end
 
-				self.Library:Notify({
-					Title = "Interface",
-					Content = "Config loader",
-					SubContent = string.format("Created config %q", name),
-					Duration = 7
-				})
-
                 SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
                 SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
             end
@@ -265,13 +252,6 @@ local SaveManager = {} do
 					Duration = 7
 				})
 			end
-
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Loaded config %q", name),
-				Duration = 7
-			})
 		end})
 
 		section:AddButton({Title = "Overwrite config", Callback = function()
@@ -286,13 +266,6 @@ local SaveManager = {} do
 					Duration = 7
 				})
 			end
-
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Overwrote config %q", name),
-				Duration = 7
-			})
 		end})
 
 		section:AddButton({Title = "Refresh list", Callback = function()
@@ -305,12 +278,6 @@ local SaveManager = {} do
 			local name = SaveManager.Options.SaveManager_ConfigList.Value
 			writefile(self.Folder .. "/settings/autoload.txt", name)
 			AutoloadButton:SetDesc("Current autoload config: " .. name)
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Set %q to auto load", name),
-				Duration = 7
-			})
 		end})
 
 		if isfile(self.Folder .. "/settings/autoload.txt") then
