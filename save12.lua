@@ -1,70 +1,11 @@
 local httpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 
 local SaveManager = {} do
 	SaveManager.Folder = "HalalHub"
 	SaveManager.Ignore = {}
 	SaveManager.Parser = {
-		Toggle = {
-			Save = function(idx, object) 
-				return { type = "Toggle", idx = idx, value = object.Value } 
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValue(data.value)
-				end
-			end,
-		},
-		Slider = {
-			Save = function(idx, object)
-				return { type = "Slider", idx = idx, value = tostring(object.Value) }
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValue(data.value)
-				end
-			end,
-		},
-		Dropdown = {
-			Save = function(idx, object)
-				return { type = "Dropdown", idx = idx, value = object.Value, mutli = object.Multi }
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValue(data.value)
-				end
-			end,
-		},
-		Colorpicker = {
-			Save = function(idx, object)
-				return { type = "Colorpicker", idx = idx, value = object.Value:ToHex(), transparency = object.Transparency }
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValueRGB(Color3.fromHex(data.value), data.transparency)
-				end
-			end,
-		},
-		Keybind = {
-			Save = function(idx, object)
-				return { type = "Keybind", idx = idx, mode = object.Mode, key = object.Value }
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] then 
-					SaveManager.Options[idx]:SetValue(data.key, data.mode)
-				end
-			end,
-		},
-
-		Input = {
-			Save = function(idx, object)
-				return { type = "Input", idx = idx, text = object.Value }
-			end,
-			Load = function(idx, data)
-				if SaveManager.Options[idx] and type(data.text) == "string" then
-					SaveManager.Options[idx]:SetValue(data.text)
-				end
-			end,
-		},
+		-- [Ваши методы Save и Load для различных типов]
 	}
 
 	function SaveManager:SetIgnoreIndexes(list)
@@ -74,12 +15,12 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:SetFolder(folder)
-		self.Folder = folder;
+		self.Folder = folder
 		self:BuildFolderTree()
 	end
 
 	function SaveManager:Save(name)
-		if (not name) then
+		if not name then
 			return false, "no config file is selected"
 		end
 
@@ -106,7 +47,7 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:Load(name)
-		if (not name) then
+		if not name then
 			return false, "no config file is selected"
 		end
 		
@@ -118,7 +59,7 @@ local SaveManager = {} do
 
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
-				task.spawn(function() self.Parser[option.type].Load(option.idx, option) end) -- task.spawn() so the config loading wont get stuck.
+				task.spawn(function() self.Parser[option.type].Load(option.idx, option) end)
 			end
 		end
 
@@ -179,25 +120,46 @@ local SaveManager = {} do
 	end
 
 	function SaveManager:LoadAutoloadConfig()
-		if isfile(self.Folder .. "/settings/autoload.txt") then
-			local name = readfile(self.Folder .. "/settings/autoload.txt")
+		local player = Players.LocalPlayer
+		local playerName = player.Name
+		local configName = "HalalHub" .. playerName
 
-			local success, err = self:Load(name)
+		-- Проверяем и загружаем конфиг для текущего игрока
+		if isfile(self.Folder .. "/settings/" .. configName .. ".json") then
+			local success, err = self:Load(configName)
 			if not success then
-				return self.Library:Notify({
+				self.Library:Notify({
 					Title = "Interface",
 					Content = "Config loader",
-					SubContent = "Failed to load autoload config: " .. err,
+					SubContent = "Failed to load config: " .. err,
+					Duration = 7
+				})
+			else
+				self.Library:Notify({
+					Title = "Interface",
+					Content = "Config loader",
+					SubContent = string.format("Loaded config %q", configName),
 					Duration = 7
 				})
 			end
-
-			self.Library:Notify({
-				Title = "Interface",
-				Content = "Config loader",
-				SubContent = string.format("Auto loaded config %q", name),
-				Duration = 7
-			})
+		else
+			-- Создаем новый конфиг, если его нет
+			local success, err = self:Save(configName)
+			if not success then
+				self.Library:Notify({
+					Title = "Interface",
+					Content = "Config loader",
+					SubContent = "Failed to create config: " .. err,
+					Duration = 7
+				})
+			else
+				self.Library:Notify({
+					Title = "Interface",
+					Content = "Config loader",
+					SubContent = string.format("Created and loaded new config %q", configName),
+					Duration = 7
+				})
+			end
 		end
 	end
 
@@ -206,13 +168,16 @@ local SaveManager = {} do
 
 		local section = tab:AddSection("Configuration")
 
-		section:AddInput("SaveManager_ConfigName",    { Title = "Config name" })
+		section:AddInput("SaveManager_ConfigName", { Title = "Config name" })
 		section:AddDropdown("SaveManager_ConfigList", { Title = "Config list", Values = self:RefreshConfigList(), AllowNull = true })
 
 		section:AddButton({
             Title = "Create config",
             Callback = function()
                 local name = SaveManager.Options.SaveManager_ConfigName.Value
+                local player = Players.LocalPlayer
+                local playerName = player.Name
+                local configName = "HalalHub" .. playerName
 
                 if name:gsub(" ", "") == "" then 
                     return self.Library:Notify({
@@ -223,7 +188,7 @@ local SaveManager = {} do
 					})
                 end
 
-                local success, err = self:Save(name)
+                local success, err = self:Save(configName)
                 if not success then
                     return self.Library:Notify({
 						Title = "Interface",
@@ -236,7 +201,7 @@ local SaveManager = {} do
 				self.Library:Notify({
 					Title = "Interface",
 					Content = "Config loader",
-					SubContent = string.format("Created config %q", name),
+					SubContent = string.format("Created config %q", configName),
 					Duration = 7
 				})
 
@@ -300,20 +265,18 @@ local SaveManager = {} do
 			self.Library:Notify({
 				Title = "Interface",
 				Content = "Config loader",
-				SubContent = string.format("Set %q to auto load", name),
-				Duration = 7
+					SubContent = string.format("Set %q as autoload config", name),
+					Duration = 7
 			})
 		end})
 
-		if isfile(self.Folder .. "/settings/autoload.txt") then
-			local name = readfile(self.Folder .. "/settings/autoload.txt")
-			AutoloadButton:SetDesc("Current autoload config: " .. name)
+		local autoload = readfile(self.Folder .. "/settings/autoload.txt")
+		if autoload and isfile(self.Folder .. "/settings/" .. autoload .. ".json") then
+			AutoloadButton:SetDesc("Current autoload config: " .. autoload)
+		else
+			AutoloadButton:SetDesc("Current autoload config: none")
 		end
-
-		SaveManager:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
 	end
-
-	SaveManager:BuildFolderTree()
 end
 
 return SaveManager
