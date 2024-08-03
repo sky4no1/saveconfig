@@ -1,5 +1,6 @@
 local httpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer -- Получаем объект игрока
+local playerName = player.Name
 
 local SaveManager = {} do
     SaveManager.Folder = "HalalHub"
@@ -68,34 +69,30 @@ local SaveManager = {} do
         },
     }
 
-    function SaveManager:SetIgnoreIndexes(list)
-        for _, key in next, list do
-            self.Ignore[key] = true
-        end
+    
+    function SaveManager:Save()
+        
+    local fullPath = self.Folder .. "/settings/" .. "HalalHub" .. playerName .. ".json"
+
+    local data = {
+        objects = {}
+    }
+
+    for idx, option in next, SaveManager.Options do
+        if not self.Parser[option.Type] then continue end
+        if self.Ignore[idx] then continue end
+
+        table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
+    end	
+
+    local success, encoded = pcall(httpService.JSONEncode, httpService, data)
+    if not success then
+        return false, "failed to encode data"
     end
 
-    function SaveManager:SetFolder(folder)
-        self.Folder = folder;
-        self:BuildFolderTree()
-    end
-
-    function SaveManager:Save(name)
-        if not name then
-            return false, "no config file is selected"
-        end
-
-        local fullPath = self.Folder .. "/settings/" .. name .. ".json"
-
-        local data = {
-            objects = {}
-        }
-
-        for idx, option in next, SaveManager.Options do
-            if not self.Parser[option.Type] then continue end
-            if self.Ignore[idx] then continue end
-
-            table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
-        end    
+    writefile(fullPath, encoded)
+    return true
+end
 
         local success, encoded = pcall(httpService.JSONEncode, httpService, data)
         if not success then
@@ -180,7 +177,6 @@ local SaveManager = {} do
     end
 
     function SaveManager:LoadAutoloadConfig()
-        local playerName = player.Name -- Получаем имя игрока
         local autoloadFilePath = self.Folder .. "/settings/autoload.txt"
 
         if isfile(autoloadFilePath) then
