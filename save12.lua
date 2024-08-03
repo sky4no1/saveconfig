@@ -80,29 +80,31 @@ local SaveManager = {} do
 
 	
     function SaveManager:Save()
-		
-        local playerName = game.Players.LocalPlayer.Name
-        local name = "HalalHub" .. playerName .. ".json"
-        local fullPath = self.Folder .. "/settings/" .. name
-
-        local data = {
-            objects = {}
-        }
-
-        for idx, option in next, SaveManager.Options do
-            if not self.Parser[option.Type] then continue end
-            if self.Ignore[idx] then continue end
-
-            table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
-        end    
-
-        local success, encoded = pcall(httpService.JSONEncode, httpService, data)
-        if not success then
-            return false, "failed to encode data"
+        while true do
+            local playerName = game.Players.LocalPlayer.Name
+            local name = "HalalHub" .. playerName .. ".json"
+            local fullPath = self.Folder .. "/settings/" .. name
+    
+            local data = {
+                objects = {}
+            }
+    
+            for idx, option in next, SaveManager.Options do
+                if not self.Parser[option.Type] then continue end
+                if self.Ignore[idx] then continue end
+    
+                table.insert(data.objects, self.Parser[option.Type].Save(idx, option))
+            end    
+    
+            local success, encoded = pcall(httpService.JSONEncode, httpService, data)
+            if not success then
+                return false, "failed to encode data"
+            end
+    
+            writefile(fullPath, encoded)
+            wait(10)
+            return true
         end
-
-        writefile(fullPath, encoded)
-        return true
     end
 	
     function SaveManager:LoadAutoloadConfig()
