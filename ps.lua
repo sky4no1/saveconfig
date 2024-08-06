@@ -1,2 +1,1 @@
-local remote = game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("chooseType"):WaitForChild("Frame"):WaitForChild("RemoteEvent")
-remote:FireServer(true)
+game:GetService("Players").LocalPlayer.PlayerGui.chooseType.Frame.RemoteEvent:FireServer(true)
